@@ -1,0 +1,19 @@
+{
+  "extends": "@tsconfig/node22/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "isolatedModules": true,
+    "outDir": "./dist",
+    "paths": {
+      "@app": ["app"],
+      "@chat/*": ["chat/*"],
+      "@documents/*": ["documents/*"],
+      "@package": ["../package.json"],
+      "@swagger/*": ["swagger/*"],
+      "@utils/*": ["utils/*"],
+      "@version/*": ["version/*"]
+    },
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*"]
+}

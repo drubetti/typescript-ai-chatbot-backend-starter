@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  redis:
+    image: redis/redis-stack-server
+    volumes:
+      - ./.redis/:/data
+    ports:
+      - '6379:6379'
+
+  typescript-ai-chatbot-backend-starter:
+    depends_on:
+      - redis
+    image: typescript-ai-chatbot-backend-starter:latest
+    container_name: typescript-ai-chatbot-backend-starter
+    restart: on-failure
+    ports:
+      - '3000:3000'
+    environment:
+      - APP_SERVER_PORT
+      - DB_CONNECTION_STRING
+      - DB_HISTORY_LIMIT
+      - DB_NAME
+      - DB_TYPE
+      - EMBEDDINGS_BASE_URL
+      - EMBEDDINGS_MODEL_NAME
+      - LLM_BASE_URL
+      - LLM_NAME
+      - LLM_TEMPERATURE
+      - VECTOR_DB_CONNECTION_STRING
+      - VECTOR_DB_INDEX
+      - VECTOR_DB_TYPE

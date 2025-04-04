@@ -8,6 +8,6 @@ import type { Request, Response } from 'express';
  *       description: The request was acknowledged.
  */
 export const noContent = async (_req: Request, res: Response) =>
-	res.sendStatus(204);
+	void res.sendStatus(204);
 
 export default noContent;

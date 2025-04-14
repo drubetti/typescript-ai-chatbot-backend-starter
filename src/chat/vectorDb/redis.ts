@@ -10,7 +10,13 @@ import embeddings from './embeddings';
 const redisClient = createClient({ url });
 
 export const closeVectorDb: VectorDb['closeVectorDb'] = async () => {
-	await redisClient.disconnect();
+	try {
+		await redisClient.disconnect();
+	} catch (e) {
+		const redisError = e as Error;
+		if (redisError?.message === 'The client is closed') return; // Already closed, do nothing.
+		throw e;
+	}
 };
 
 export const initVectorDb: VectorDb['initVectorDb'] = async () => {

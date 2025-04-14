@@ -1,6 +1,6 @@
 import { serverPort } from '@utils/env'; // This must be loaded before anything else.
 
-import process from 'node:process';
+import process, { exit } from 'node:process';
 import app from '@app';
 import { closeDb, initDb } from '@chat/db';
 import { closeVectorDb, initVectorDb } from '@chat/vectorDb';
@@ -9,25 +9,53 @@ import initCron from '@utils/cron';
 import logger from '@utils/logger';
 import onDeath from 'death';
 
+const EXIT_TIMEOUT = 1_000; // Wait for loggers to flush before exiting.
 const port = Number.parseInt(serverPort);
-
 const registerExitCallback = onDeath({ uncaughtException: true });
 
-const onError = (err: unknown) => {
+const onAppError = (err: unknown) => {
 	logger.error(err);
-	process.exit(1);
+	process.exitCode = 1;
+	setTimeout(() => exit(), EXIT_TIMEOUT);
 };
 
-const unRegisterExitCallback = registerExitCallback(async () => {
-	logger.info('Stopping server...');
-	try {
-		unRegisterExitCallback();
-		await Promise.all([closeDb(true), closeVectorDb()]);
-		process.exit(0);
-	} catch (err) {
-		onError(err);
+const onSignalOrUncaughtException = async (
+	signalOrError: string | Error,
+	origin: string | Error,
+) => {
+	unRegisterExitCallback();
+
+	if (typeof signalOrError === 'string') {
+		logger.info(`Received signal: ${signalOrError}`);
+
+		if (origin instanceof Error) {
+			logger.error(origin);
+			process.exitCode = 1;
+		}
+	} else if (signalOrError) {
+		logger.error(signalOrError);
+		process.exitCode = 1;
 	}
-});
+
+	logger.info('Stopping server...');
+
+	try {
+		await Promise.all([closeDb(true), closeVectorDb()]);
+		exit();
+	} catch (err) {
+		onAppError(err);
+	}
+};
+
+const unRegisterExitCallback = registerExitCallback(
+	// @ts-ignore: "origin" type definition is wrong!
+	onSignalOrUncaughtException,
+);
+
+const onAppListen = (error?: Error) => {
+	if (error) throw error;
+	logger.info(`${name} is running on port ${port}!`);
+};
 
 const startServer = async () => {
 	logger.info('Starting server...');
@@ -36,9 +64,9 @@ const startServer = async () => {
 		await Promise.all([initDb(), initVectorDb()]);
 		logger.info('Initialising cron(s)...');
 		initCron();
-		app.listen(port, () => logger.info(`${name} is running on port ${port}!`));
+		app.listen(port, onAppListen);
 	} catch (err) {
-		onError(err);
+		onAppError(err);
 	}
 };
 

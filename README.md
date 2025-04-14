@@ -31,10 +31,14 @@ The supported environment variables are:
 - `DB_HISTORY_LIMIT`: the number of past messages in the chat that the LLM will consider when giving answers. Higher the number, lower the performance.
 - `DB_NAME`: the name of the database where the messages will be stored. Ignored if `DB_TYPE` is `memory`.
 - `DB_TYPE`: can be `mongodb` or `memory`. If set to `memory` or an unsupported value, the messages will not be persisted.
-- `EMBEDDINGS_BASE_URL`: the Ollama connection string (for embeddings).
+- `EMBEDDINGS_API_KEY`: the API Key of the embedding service. Not required and ignored if `EMBEDDINGS_MODEL_SERVICE` is `ollama`. It must be equal to `LLM_API_KEY` if the embedding service is the same as the LLM service.
+- `EMBEDDINGS_BASE_URL`: the Ollama connection string (for embeddings). Ignored if `EMBEDDINGS_MODEL_SERVICE` is not `ollama`.
 - `EMBEDDINGS_MODEL_NAME`: the model that will be used for LLM embeddings.
-- `LLM_BASE_URL`: the Ollama connection string.
+- `EMBEDDINGS_MODEL_SERVICE`: the service that will be used for LLM embeddings. The supported values are: `ollama` (default), `openai`.
+- `LLM_API_KEY`: the API Key of the LLM service. Not required and ignored if `LLM_SERVICE` is `ollama`.
+- `LLM_BASE_URL`: the Ollama connection string. Ignored if `LLM_SERVICE` is not `ollama`.
 - `LLM_NAME`: the name of the LLM.
+- `LLM_SERVICE`: the name of the LLM service. The supported values are: `ollama` (default), `openai`.
 - `LLM_TEMPERATURE`: the LLM temperature (default: `0`).
 - `VECTOR_DB_CONNECTION_STRING`: the Redis Stack connection string.
 - `VECTOR_DB_INDEX`: the LLM embeddings index name.
@@ -82,10 +86,17 @@ You can install and start Redis Stack using Docker:
 docker compose -f docker-compose.redis.yml up -d
 ```
 
-You are supposed to already have a working Ollama service.  
+If you want to use [OpenAI](https://openai.com/) as LLM and embedding service,
+you need to set `EMBEDDINGS_MODEL_SERVICE` and `LLM_SERVICE` to `openai`.  
+After that, you'll also need to set `EMBEDDINGS_API_KEY` and `LLM_API_KEY` to your OpenAI API key.  
+Then, you'll be able to start the app.
+
+**Otherwise**, you are supposed to already have a working Ollama service
+and `EMBEDDINGS_MODEL_SERVICE` and `LLM_SERVICE` must be set to `ollama`.
+
 A local Ollama instance can be installed [natively](https://github.com/ollama/ollama/blob/main/README.md)
 or [with Docker](https://hub.docker.com/r/ollama/ollama).  
-The models set in `EMBEDDINGS_MODEL_NAME` and `LLM_NAME` must be pulled before starting the app.
+If using Ollama, the models set in `EMBEDDINGS_MODEL_NAME` and `LLM_NAME` must be pulled before starting the app.
 
 ```shell
 ollama pull llama3.2:1b
@@ -93,7 +104,7 @@ ollama pull mxbai-embed-large
 ```
 
 Replace `llama3.2:1b` and `mxbai-embed-large` with the models you have set in your `.env` file.  
-If using a remote Ollama service, the models can also be pulled by making a `POST` request to the service:
+**If** using a remote Ollama service, the models can also be pulled by making a `POST` request to the service:
 
 ```shell
 curl http://localhost:11434/api/pull -d '{

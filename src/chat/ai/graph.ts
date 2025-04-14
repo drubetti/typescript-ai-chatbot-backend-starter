@@ -1,4 +1,4 @@
-import type { Document } from '@langchain/core/documents';
+import type { Document, DocumentInterface } from '@langchain/core/documents';
 import { trimMessages } from '@langchain/core/messages';
 import {
 	Annotation,
@@ -8,6 +8,7 @@ import {
 	StateGraph,
 } from '@langchain/langgraph';
 import { dbHistoryLimit } from '@utils/env';
+import { logger } from '@utils/logger';
 import { vectorStore } from '../vectorDb';
 import checkpointer from './checkpointer';
 import llm from './llm';
@@ -34,9 +35,19 @@ const retrieve = async (state: typeof StateAnnotation.State) => {
 		.reverse()
 		.find((m) => m.getType() === 'human');
 	const question = lastHumanMessage?.content;
-	const retrievedDocs = question
-		? await vectorStore.similaritySearch(`${question}`)
-		: [];
+
+	let retrievedDocs: DocumentInterface[];
+
+	try {
+		retrievedDocs = question
+			? await vectorStore.similaritySearch(`${question}`)
+			: [];
+	} catch (e) {
+		logger.error(e);
+		logger.info('Retrieval failed, using empty context.');
+		retrievedDocs = [];
+	}
+
 	return { context: retrievedDocs };
 };
 

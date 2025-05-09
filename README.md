@@ -7,7 +7,7 @@ An example AI chatbot backend project made with [TypeScript](https://www.typescr
 
 - [Node.js](https://nodejs.org/) v22 _or_ [Node Version Manager](https://github.com/nvm-sh/nvm)
   - _To run the application._
-- [Ollama](https://ollama.com/)
+- [Ollama](https://ollama.com/) _or_ an [OpenAI](https://openai.com/) API key
   - _As the LLM service._
 - [Redis Stack](https://redis.io/docs/latest/operate/oss_and_stack/install/install-stack/) (**not** [Redis](https://redis.io/docs/latest/operate/oss_and_stack/install/)!)
   - _To save LLM embeddings._
